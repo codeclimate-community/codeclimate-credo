@@ -1,7 +1,7 @@
 defmodule CodeClimate.MixProject do
   use Mix.Project
 
-  def version, do: "0.8.10"
+  def version, do: "1.1.0"
 
   def project do
     [
