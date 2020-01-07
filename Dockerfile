@@ -18,7 +18,7 @@ ENV MIX_ENV prod
 RUN mix local.hex --force
 
 RUN git clone https://github.com/michalmuskala/jason
-RUN cd jason && git checkout tags/v1.1.1
+RUN cd jason && git checkout tags/v1.1.2
 RUN cd jason && MIX_ENV=prod mix deps.get --force
 RUN cd jason && MIX_ENV=prod mix archive.build --force
 RUN cd jason && MIX_ENV=prod mix archive.install --force
@@ -29,8 +29,7 @@ RUN cd bunt && MIX_ENV=prod mix deps.get --force
 RUN cd bunt && MIX_ENV=prod mix archive.build --force
 RUN cd bunt && MIX_ENV=prod mix archive.install --force
 
-RUN git clone https://github.com/fazibear/credo
-RUN cd credo && git checkout codeclimate
+RUN git clone https://github.com/codeclimate-community/credo
 RUN cd credo && MIX_ENV=prod mix deps.get --force
 RUN cd credo && MIX_ENV=prod mix archive.build --force
 RUN cd credo && MIX_ENV=prod mix archive.install --force
@@ -40,6 +39,5 @@ RUN cd codeclimate && MIX_ENV=prod mix archive.build --force
 RUN cd codeclimate && MIX_ENV=prod mix archive.install --force
 
 VOLUME /code
-#WORKDIR /code
 
 CMD mix code_climate /code
