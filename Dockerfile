@@ -29,7 +29,7 @@ RUN cd bunt && MIX_ENV=prod mix deps.get --force
 RUN cd bunt && MIX_ENV=prod mix archive.build --force
 RUN cd bunt && MIX_ENV=prod mix archive.install --force
 
-RUN git clone https://github.com/rrrene/credo
+RUN git clone --depth 1 https://github.com/rrrene/credo
 RUN cd credo && MIX_ENV=prod mix deps.get --force
 RUN cd credo && MIX_ENV=prod mix archive.build --force
 RUN cd credo && MIX_ENV=prod mix archive.install --force

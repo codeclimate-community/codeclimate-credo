@@ -7,21 +7,26 @@ defmodule CodeClimate do
   @cmd "mix"
   @default_opts ~w[credo --format=json]
 
+  @category_duplication "Duplication"
+  @category_clarity "Clarity"
+  @category_complexity "Complexity"
+  @category_bug_risk "Bug Risk"
+
   @issue_category %{
-    "Credo.Check.Design.DuplicatedCode" => ["Duplication"],
-    "Credo.Check.Readability.ModuleDoc" => ["Clarity"],
-    "Credo.Check.Readability.ModuleNames" => ["Clarity"],
-    "Credo.Check.Refactor.ABCSize" => ["Complexity"],
-    "Credo.Check.Refactor.CyclomaticComplexity" => ["Complexity"],
-    "Credo.Check.Warning.NameRedeclarationByFn" => ["Clarity"],
-    "Credo.Check.Warning.OperationOnSameValues" => ["Bug Risk"],
-    "Credo.Check.Warning.BoolOperationOnSameValues" => ["Bug Risk"],
-    "Credo.Check.Warning.UnusedEnumOperation" => ["Bug Risk"],
-    "Credo.Check.Warning.UnusedKeywordOperation" => ["Bug Risk"],
-    "Credo.Check.Warning.UnusedListOperation" => ["Bug Risk"],
-    "Credo.Check.Warning.UnusedStringOperation" => ["Bug Risk"],
-    "Credo.Check.Warning.UnusedTupleOperation" => ["Bug Risk"],
-    "Credo.Check.Warning.OperationWithConstantResult" => ["Bug Risk"]
+    "Credo.Check.Design.DuplicatedCode" => [@category_duplication],
+    "Credo.Check.Readability.ModuleDoc" => [@category_clarity],
+    "Credo.Check.Readability.ModuleNames" => [@category_clarity],
+    "Credo.Check.Refactor.ABCSize" => [@category_complexity],
+    "Credo.Check.Refactor.CyclomaticComplexity" => [@category_complexity],
+    "Credo.Check.Warning.NameRedeclarationByFn" => [@category_clarity],
+    "Credo.Check.Warning.OperationOnSameValues" => [@category_bug_risk],
+    "Credo.Check.Warning.BoolOperationOnSameValues" => [@category_bug_risk],
+    "Credo.Check.Warning.UnusedEnumOperation" => [@category_bug_risk],
+    "Credo.Check.Warning.UnusedKeywordOperation" => [@category_bug_risk],
+    "Credo.Check.Warning.UnusedListOperation" => [@category_bug_risk],
+    "Credo.Check.Warning.UnusedStringOperation" => [@category_bug_risk],
+    "Credo.Check.Warning.UnusedTupleOperation" => [@category_bug_risk],
+    "Credo.Check.Warning.OperationWithConstantResult" => [@category_bug_risk]
   }
 
   def main([path]) do
@@ -46,6 +51,7 @@ defmodule CodeClimate do
       {:ok, res} ->
         %{"issues" => issues} = res
         issues
+
       {:error, err} ->
         raise err
     end
@@ -110,7 +116,6 @@ defmodule CodeClimate do
   defp build_options_from_config(config, path) do
     []
     |> process_include_paths(config, path)
-    |> process_exclude_paths(config, path)
     |> process_strict(config)
     |> process_all(config)
     |> process_only(config)
@@ -125,15 +130,6 @@ defmodule CodeClimate do
   end
 
   defp process_include_paths(opts, _, _), do: opts
-
-  defp process_exclude_paths(opts, %{"exclude_paths" => exclude_paths}, path) do
-    opts ++
-      Enum.map(exclude_paths, fn exlude ->
-        "--files-excluded=#{path}/#{exlude}"
-      end)
-  end
-
-  defp process_exclude_paths(opts, _, _), do: opts
 
   defp process_strict(opts, %{"strict" => true}), do: opts ++ ["--strict"]
   defp process_strict(opts, _), do: opts
