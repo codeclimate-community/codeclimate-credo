@@ -5,7 +5,24 @@ defmodule CodeClimate do
 
   @config_filename "/config.json"
   @cmd "mix"
-  @default_opts ~w[credo --format=codeclimate]
+  @default_opts ~w[credo --format=json]
+
+  @issue_category %{
+    "Credo.Check.Design.DuplicatedCode" => ["Duplication"],
+    "Credo.Check.Readability.ModuleDoc" => ["Clarity"],
+    "Credo.Check.Readability.ModuleNames" => ["Clarity"],
+    "Credo.Check.Refactor.ABCSize" => ["Complexity"],
+    "Credo.Check.Refactor.CyclomaticComplexity" => ["Complexity"],
+    "Credo.Check.Warning.NameRedeclarationByFn" => ["Clarity"],
+    "Credo.Check.Warning.OperationOnSameValues" => ["Bug Risk"],
+    "Credo.Check.Warning.BoolOperationOnSameValues" => ["Bug Risk"],
+    "Credo.Check.Warning.UnusedEnumOperation" => ["Bug Risk"],
+    "Credo.Check.Warning.UnusedKeywordOperation" => ["Bug Risk"],
+    "Credo.Check.Warning.UnusedListOperation" => ["Bug Risk"],
+    "Credo.Check.Warning.UnusedStringOperation" => ["Bug Risk"],
+    "Credo.Check.Warning.UnusedTupleOperation" => ["Bug Risk"],
+    "Credo.Check.Warning.OperationWithConstantResult" => ["Bug Risk"]
+  }
 
   def main([path]) do
     {:ok, config} = open_config_file(@config_filename)
@@ -14,7 +31,76 @@ defmodule CodeClimate do
 
     {out, _exit} = System.cmd(@cmd, opts, stderr_to_stdout: false)
 
-    IO.puts(out)
+    print_issues(out, path)
+  end
+
+  defp print_issues(issues, path) do
+    decode_json(issues)
+    |> Enum.map(&to_json(&1, path))
+    |> Enum.join("\0")
+    |> IO.puts()
+  end
+
+  defp decode_json(issues) do
+    case Jason.decode(issues) do
+      {:ok, res} ->
+        %{"issues" => issues} = res
+        issues
+      {:error, err} ->
+        raise err
+    end
+  end
+
+  defp to_json(issue, path) do
+    %{
+      "priority" => priority,
+      "check" => check,
+      "message" => message,
+      "filename" => filename,
+      "line_no" => line,
+      "column" => column_start,
+      "column_end" => column_end
+    } = issue
+
+    %{
+      type: "issue",
+      categories: categories(check),
+      check_name: check,
+      description: message,
+      remediation_points: 50_000,
+      severity: severity(priority),
+      content: %{
+        body: message
+      },
+      location: %{
+        path: Path.relative_to(filename, path),
+        positions: %{
+          begin: %{
+            line: line || 1,
+            column: column_start || 1
+          },
+          end: %{
+            line: line || 1,
+            column: column_end || 1
+          }
+        }
+      }
+    }
+    |> Jason.encode!()
+  end
+
+  defp categories(check) do
+    @issue_category[check] || ["Style"]
+  end
+
+  defp severity(priority) do
+    case priority do
+      priority when priority > 20 -> "blocker"
+      priority when priority in 10..19 -> "critical"
+      priority when priority in 0..9 -> "major"
+      priority when priority in -10..-1 -> "minor"
+      priority when priority < -10 -> "info"
+    end
   end
 
   defp open_config_file(filename) do
@@ -34,7 +120,7 @@ defmodule CodeClimate do
   defp process_include_paths(opts, %{"include_paths" => include_paths}, path) do
     opts ++
       Enum.map(include_paths, fn include ->
-        "--include=#{path}/#{include}"
+        "--files-included=#{path}/#{include}"
       end)
   end
 
@@ -43,7 +129,7 @@ defmodule CodeClimate do
   defp process_exclude_paths(opts, %{"exclude_paths" => exclude_paths}, path) do
     opts ++
       Enum.map(exclude_paths, fn exlude ->
-        "--exclude=#{path}/#{exlude}"
+        "--files-excluded=#{path}/#{exlude}"
       end)
   end
 
@@ -60,9 +146,4 @@ defmodule CodeClimate do
 
   defp process_ignore(opts, %{"ignore" => ignore}), do: opts ++ ["--ignore=#{ignore}"]
   defp process_ignore(opts, _), do: opts
-
-  # defp debug(input) do
-  #   IO.puts(:stderr, inspect(input))
-  #   input
-  # end
 end

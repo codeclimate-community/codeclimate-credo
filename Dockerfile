@@ -1,6 +1,6 @@
 FROM elixir:alpine
 
-MAINTAINER Scott Larkin "scott@codeclimate.com"
+MAINTAINER Michał Kalbarczyk "fazibear@gmail.com"
 
 RUN apk add git bash
 
@@ -29,7 +29,7 @@ RUN cd bunt && MIX_ENV=prod mix deps.get --force
 RUN cd bunt && MIX_ENV=prod mix archive.build --force
 RUN cd bunt && MIX_ENV=prod mix archive.install --force
 
-RUN git clone https://github.com/codeclimate-community/credo
+RUN git clone https://github.com/rrrene/credo
 RUN cd credo && MIX_ENV=prod mix deps.get --force
 RUN cd credo && MIX_ENV=prod mix archive.build --force
 RUN cd credo && MIX_ENV=prod mix archive.install --force
